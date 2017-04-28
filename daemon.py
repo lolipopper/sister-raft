@@ -6,10 +6,12 @@ import requests
 import threading
 import json
 import uuid
+import time
 
 PORT = 12221;
 URL = "";
 ID = -999;
+WAIT = 5;
 
 def sendStatus():
     load = getCpuLoad();
@@ -58,5 +60,4 @@ while True:
     print (ID)
     sendStatus()
     print(str(getCpuLoad()))
-
-
+    time.sleep(WAIT)
