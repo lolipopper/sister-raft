@@ -9,15 +9,16 @@ import uuid
 import time
 
 PORT = 12221;
-URL = "";
+URL = "http://localhost/";
 ID = -999;
 WAIT = 5;
 
 def sendStatus():
     load = getCpuLoad();
-    headers = {'content-type' : 'application/json'}
-    data = {"load":load,"id":ID}
-    requests.post(URL,data=data)
+    # headers = {'content-type' : 'application/json'}
+    # data = {"load":load,"id":ID}
+    # requests.post(URL,data=data)
+    requests.get(URL+"?id="+str(ID)+"&load="+str(load))
 
 def getCpuLoad():
     return psutil.cpu_percent(interval=1)
