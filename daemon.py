@@ -7,6 +7,7 @@ import threading
 import json
 import time
 import random
+import sys
 
 PORT = 12220;
 DEFAULTNODEPORT = 14440;
@@ -15,6 +16,7 @@ CPUSTATUS = 2
 URL = "http://localhost";
 ID = 0;
 MAXNODE = 3
+MAXID = 3
 WAIT = 5;
 
 def sendStatus():
@@ -53,6 +55,15 @@ class DaemonHandler(BaseHTTPRequestHandler):
 
 class ThreadingServer(ThreadingMixIn,HTTPServer):
     pass
+
+#init
+if len(sys.argv)!=2:
+    sys.exit("Please put 1 argument for ID")
+ID = int(sys.argv[1])
+if ID > MAXID or ID < 0:
+    sys.exit("Please put ID in range of 0 - MAXID")
+print("You have ID:"+str(ID))
+
 
 # start the server in a background thread
 server = ThreadingServer(('localhost',PORT),DaemonHandler)
