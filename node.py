@@ -18,7 +18,6 @@ MAXID = 3
 MAXWORKER = 5
 WAIT = 5
 
-timer = None
 REQUESTVOTE = 0
 APPENDENTRY = 1
 CPUSTATUS = 2
@@ -29,9 +28,10 @@ ERRORCODE = 999
 node = []
 worker = []
 
-leaderID = 0
+leaderID = -999
 hasVoted = 0
 status = 0
+starttime = None
 timeout = 0
 commitid = 999
 commitload = 999
@@ -57,7 +57,17 @@ def init():
 
     global timeout
     timeout = randomTimeout()
+
+    global starttime
+    starttime = time.time()
     
+def isTimeout():
+    global starttime
+    global timeout
+    if time.time() > (starttime + timeout):
+        return True
+    else:
+        return False
 
 class NodeHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -71,6 +81,7 @@ class NodeHandler(BaseHTTPRequestHandler):
             global timeout
             global commitid
             global commitload
+            global starttime
 
             args = self.path.split('/')
 
@@ -86,17 +97,18 @@ class NodeHandler(BaseHTTPRequestHandler):
                     print("RequestVote")
                     if(hasVoted == 0):
                         hasVoted = 1
-                        timeout = randomTimeout()
+                        starttime = time.time()
                         self.wfile.write(str(ID).encode('utf-8'))
                     else:
                         self.wfile.write(str(ERRORCODE).encode('utf-8'))
 
                 elif n==APPENDENTRY:
                     print("APPENDENTRY")
+                    starttime = time.time()
                     status = 0
                     hasVoted = 0
                     leaderID = args[2]
-                    timeout = randomTimeout()
+                    starttime = time.time()
                     if len(args) == 5 :
                         commitid = args[3]
                         commitload = args[4]
@@ -150,10 +162,11 @@ server_thread.start()
 time.sleep(WAIT)
 
 while True:
-    print(str(timeout))
-    if timeout < 0 and status == 0:
+    if isTimeout() and status == 0:
         print("Become Candidate")
-        timeout = randomTimeout()
+        if leaderID != -999:
+            timeout = randomTimeout()
+        starttime = time.time()
         status = 1
         hasVoted = 1
         count = 1
@@ -164,31 +177,38 @@ while True:
         for i in range(MAXID):
             if i != ID:
                 print(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(REQUESTVOTE))
-                resp = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(REQUESTVOTE))
-                if int(resp.text) < MAXID:
-                    count += 1
-                    print("YOU GOT A COUNT, NOW YOUR COUNT IS = " + str(count))
+
+                try:
+                    resp = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(REQUESTVOTE))
+                    if int(resp.text) < MAXID:
+                        count += 1
+                        print("YOU GOT A COUNT, NOW YOUR COUNT IS = " + str(count))
+                except requests.exceptions.RequestException as e:
+                    print (e)
     elif status == 2:
         print("Checking Vote " + str(count) + "NEED " + str((MAXID//2)+1))
         if count >= (MAXID//2)+1:
             status = 3
-        elif timeout < 0:
+        elif isTimeout():
+            count = 0
+            timeout = randomTimeout()
+            starttime = time.time()
+            hasVoted = 0
             status = 0
     elif status == 3:
         print("Become Leader")
         count = 1
         for i in range(MAXID):
             if i!= ID:
-                if commitid==999:
-                    resp = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(APPENDENTRY)+"/"+str(ID))
-                else:
-                    resp = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(APPENDENTRY)+"/"+str(ID)+"/"+str(commitid)+"/"+str(commitload))
-                if int(resp.text) < MAXID:
-                    count += 1
+                try:
+                    if commitid==999:
+                            resp = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(APPENDENTRY)+"/"+str(ID))
+                    else:
+                            resp = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(APPENDENTRY)+"/"+str(ID)+"/"+str(commitid)+"/"+str(commitload))
+                    if int(resp.text) < MAXID:
+                        count += 1
+                except requests.exceptions.RequestException as e:
+                    print (e)
         commitid = 999;
         if count < (MAXID//2)+1:
             status = 0
-
-
-    timeout = timeout - 5
-
