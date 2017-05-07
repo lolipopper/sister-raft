@@ -11,6 +11,7 @@ import random
 PORT = 12220;
 DEFAULTNODEPORT = 14440;
 WORKERPORT = 13337;
+CPUSTATUS = 2
 URL = "http://localhost";
 ID = 0;
 MAXNODE = 3
@@ -18,9 +19,12 @@ WAIT = 5;
 
 def sendStatus():
     load = getCpuLoad();
-    for i in range(MAXNODE)
-        r = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(ID)+"/"+str(load))
-        print(str(r.text))
+    for i in range(MAXNODE):
+        try:
+            r = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(CPUSTATUS)+"/"+str(ID)+"/"+str(load))
+            print(str(r.text))
+        except requests.exceptions.RequestException as e:
+            print()
 
 def getCpuLoad():
     return psutil.cpu_percent(interval=1)

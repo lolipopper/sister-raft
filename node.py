@@ -53,7 +53,7 @@ def init():
     for i in range(MAXID):
         node.append(DEFAULTNODEPORT + i)
     for i in range(MAXWORKER):
-        node.append(DEFAULTWORKERPORT + i)
+        worker.append(999.9)
 
     global timeout
     timeout = randomTimeout()
@@ -107,28 +107,31 @@ class NodeHandler(BaseHTTPRequestHandler):
                     starttime = time.time()
                     status = 0
                     hasVoted = 0
-                    leaderID = args[2]
+                    leaderID = int(args[2])
                     starttime = time.time()
                     if len(args) == 5 :
-                        commitid = args[3]
-                        commitload = args[4]
-                        worker[commitid] = commitload
+                        worker[int(args[3])] = float(args[4])
+                        print("LOAD for ID "+args[3]+"now is"+args[4])
                     self.wfile.write(str(ID).encode('utf-8'))
 
-                elif n==CPULOAD:
-                    print("CPULOAD")
-                    commitid = args[2]
-                    commitload = args[3]
+                elif n==CPUSTATUS:
+                    print("CPUSTATUS")
+                    commitid = int(args[2])
+                    print("ID = " + str(commitid))
+                    commitload = float(args[3])
+                    print("LOAD = " + str(commitload))
+                    print("WORKER COMMIT ID = " + str(worker[0]))
+                    print("DONE")
                     if status==3:
-                        worker[commitid] = commitload
+                        worker[int(args[2])] = commitload
                     else:
-                        requests.get(URL+":"+str(DEFAULTNODEPORT+leaderID)+"/"+str(CPULOAD)+"/"+str(commitid)+"/"+str(commitload))
+                        requests.get(URL+":"+str(DEFAULTNODEPORT+leaderID)+"/"+str(CPUSTATUS)+"/"+args[2]+"/"+args[3])
                     self.wfile.write(str(ID).encode('utf-8'))
 
                 elif n==REQUESTVALUE:
                     print("REQUESTVALUE")
                     leastCpuLoadId = 0
-                    searchNumber = args[2]
+                    searchNumber = int(args[2])
                     for i in range(MAXWORKER):
                         if worker[i] < worker[leastCpuLoadId]:
                             leastCpuLoadId = i
@@ -150,6 +153,7 @@ class ThreadingServer(ThreadingMixIn,HTTPServer):
     pass
 
 init()
+
 print("You have ID:"+str(ID))
 print("You are entering status:"+str(status))
 
@@ -184,7 +188,7 @@ while True:
                         count += 1
                         print("YOU GOT A COUNT, NOW YOUR COUNT IS = " + str(count))
                 except requests.exceptions.RequestException as e:
-                    print (e)
+                    print ()
     elif status == 2:
         print("Checking Vote " + str(count) + "NEED " + str((MAXID//2)+1))
         if count >= (MAXID//2)+1:
@@ -196,19 +200,20 @@ while True:
             hasVoted = 0
             status = 0
     elif status == 3:
-        print("Become Leader")
+        # print("Become Leader")
         count = 1
         for i in range(MAXID):
             if i!= ID:
                 try:
+                    print(str(commitid))
                     if commitid==999:
-                            resp = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(APPENDENTRY)+"/"+str(ID))
+                        resp = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(APPENDENTRY)+"/"+str(ID))
                     else:
-                            resp = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(APPENDENTRY)+"/"+str(ID)+"/"+str(commitid)+"/"+str(commitload))
+                        print("Sending Load")
+                        resp = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(APPENDENTRY)+"/"+str(ID)+"/"+str(commitid)+"/"+str(commitload))
                     if int(resp.text) < MAXID:
                         count += 1
                 except requests.exceptions.RequestException as e:
-                    print (e)
-        commitid = 999;
+                    print ()
         if count < (MAXID//2)+1:
             status = 0
