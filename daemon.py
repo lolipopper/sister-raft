@@ -1,61 +1,38 @@
-from socketserver import ThreadingMixIn
-from http.server import HTTPServer
-from http.server import BaseHTTPRequestHandler
 import psutil
 import requests
-import threading
-import json
-import uuid
 import time
+import random
+import sys
 
-PORT = 12221;
-URL = "http://localhost/";
-ID = -999;
+PORT = 12220;
+DEFAULTNODEPORT = 14440;
+WORKERPORT = 13330;
+CPUSTATUS = 2
+URL = "http://localhost";
+ID = 0;
+MAXNODE = 3
+MAXID = 3
 WAIT = 5;
 
 def sendStatus():
     load = getCpuLoad();
-    # headers = {'content-type' : 'application/json'}
-    # data = {"load":load,"id":ID}
-    # requests.post(URL,data=data)
-    requests.get(URL+"?id="+str(ID)+"&load="+str(load))
+    for i in range(MAXNODE):
+        try:
+            r = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(CPUSTATUS)+"/"+str(ID)+"/"+str(load))
+            print(str(r.text))
+        except requests.exceptions.RequestException as e:
+            print()
 
 def getCpuLoad():
     return psutil.cpu_percent(interval=1)
 
-class DaemonHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        try:
-            args = self.path.split('/')
-
-            self.send_response(200)
-            self.end_headers()
-
-            if len(args) != 2:
-                raise Exception()
-
-            if args[1].isdigit():
-                n = int(args[1])
-                r = requests.get("http://localhost:13337/"+str(n))
-                self.wfile.write((str(r.text)).encode('utf-8'))
-            else:
-                self.wfile.write(str(getCpuLoad()).encode('utf-8'))
-        except Exception as ex:
-            self.send_response(500)
-            self.end_headers()
-            print(ex)
-
-class ThreadingServer(ThreadingMixIn,HTTPServer):
-    pass
-
-if(ID==-999):
-    ID = uuid.uuid4()
-
-# start the server in a background thread
-server = ThreadingServer(('localhost',PORT),DaemonHandler)
-server_thread = threading.Thread(target=server.serve_forever)
-server_thread.daemon = True
-server_thread.start()
+#init
+if len(sys.argv)!=2:
+    sys.exit("Please put 1 argument for ID")
+ID = int(sys.argv[1])
+if ID > MAXID or ID < 0:
+    sys.exit("Please put ID in range of 0 - MAXID")
+print("You have ID:"+str(ID))
 
 while True:
     print (ID)
