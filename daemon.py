@@ -5,20 +5,22 @@ import psutil
 import requests
 import threading
 import json
-import uuid
 import time
+import random
 
-PORT = 12221;
-URL = "http://localhost/";
-ID = -999;
+PORT = 12220;
+DEFAULTNODEPORT = 14440;
+WORKERPORT = 13337;
+URL = "http://localhost";
+ID = 0;
+MAXNODE = 3
 WAIT = 5;
 
 def sendStatus():
     load = getCpuLoad();
-    # headers = {'content-type' : 'application/json'}
-    # data = {"load":load,"id":ID}
-    # requests.post(URL,data=data)
-    requests.get(URL+"?id="+str(ID)+"&load="+str(load))
+    for i in range(MAXNODE)
+        r = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(ID)+"/"+str(load))
+        print(str(r.text))
 
 def getCpuLoad():
     return psutil.cpu_percent(interval=1)
@@ -36,7 +38,7 @@ class DaemonHandler(BaseHTTPRequestHandler):
 
             if args[1].isdigit():
                 n = int(args[1])
-                r = requests.get("http://localhost:13337/"+str(n))
+                r = requests.get(URL+":"+str(WORKERPORT)+"/"+str(n))
                 self.wfile.write((str(r.text)).encode('utf-8'))
             else:
                 self.wfile.write(str(getCpuLoad()).encode('utf-8'))
@@ -47,9 +49,6 @@ class DaemonHandler(BaseHTTPRequestHandler):
 
 class ThreadingServer(ThreadingMixIn,HTTPServer):
     pass
-
-if(ID==-999):
-    ID = uuid.uuid4()
 
 # start the server in a background thread
 server = ThreadingServer(('localhost',PORT),DaemonHandler)
