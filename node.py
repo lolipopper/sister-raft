@@ -22,6 +22,7 @@ REQUESTVOTE = 0
 APPENDENTRY = 1
 CPUSTATUS = 2
 REQUESTVALUE = 3
+SYNCSTATUS = 4
 ERRORCODE = 999
 
 
@@ -53,7 +54,7 @@ def init():
     for i in range(MAXID):
         node.append(DEFAULTNODEPORT + i)
     for i in range(MAXWORKER):
-        worker.append(999.9)
+        worker.append(commitload)
 
     global timeout
     timeout = randomTimeout()
@@ -104,7 +105,6 @@ class NodeHandler(BaseHTTPRequestHandler):
 
                 elif n==APPENDENTRY:
                     print("APPENDENTRY")
-                    starttime = time.time()
                     status = 0
                     hasVoted = 0
                     leaderID = int(args[2])
@@ -120,14 +120,20 @@ class NodeHandler(BaseHTTPRequestHandler):
                     print("ID = " + str(commitid))
                     commitload = float(args[3])
                     print("LOAD = " + str(commitload))
-                    print("WORKER COMMIT ID = " + str(worker[0]))
-                    print("DONE")
                     if status==3:
                         worker[int(args[2])] = commitload
                     else:
                         requests.get(URL+":"+str(DEFAULTNODEPORT+leaderID)+"/"+str(CPUSTATUS)+"/"+args[2]+"/"+args[3])
                     self.wfile.write(str(ID).encode('utf-8'))
-
+                elif n==SYNCSTATUS:
+                    print("SYNCSTATUS")
+                    status = 0
+                    hasVoted = 0
+                    leaderID = int(args[2])
+                    starttime = time.time()
+                    for i in range(MAXWORKER):
+                        worker[i] = float(args[3+i])
+                    self.wfile.write(str(ID).encode('utf-8'))                    
                 elif n==REQUESTVALUE:
                     print("REQUESTVALUE")
                     leastCpuLoadId = 0
@@ -205,12 +211,14 @@ while True:
         for i in range(MAXID):
             if i!= ID:
                 try:
-                    print(str(commitid))
                     if commitid==999:
                         resp = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(APPENDENTRY)+"/"+str(ID))
                     else:
-                        print("Sending Load")
-                        resp = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(APPENDENTRY)+"/"+str(ID)+"/"+str(commitid)+"/"+str(commitload))
+                        tempURL = URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(SYNCSTATUS)+"/"+str(ID)
+                        for i in range(MAXWORKER):
+                            tempURL += "/"+str(worker[i])
+                        print(tempURL)
+                        resp = requests.get(tempURL)
                     if int(resp.text) < MAXID:
                         count += 1
                 except requests.exceptions.RequestException as e:
