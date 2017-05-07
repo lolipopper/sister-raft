@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 from http.server import HTTPServer
 from http.server import BaseHTTPRequestHandler
+import sys
 
-PORT = 13337
+PORT = 13330
+ID = 0
+MAXID = 5
 
 class WorkerHandler(BaseHTTPRequestHandler):
     def prime(self, n):
@@ -35,5 +38,13 @@ class WorkerHandler(BaseHTTPRequestHandler):
             self.end_headers()
             print(ex)
 
-server = HTTPServer(("", PORT), WorkerHandler)
+#init
+if len(sys.argv)!=2:
+    sys.exit("Please put 1 argument for ID")
+ID = int(sys.argv[1])
+if ID > MAXID or ID < 0:
+    sys.exit("Please put ID in range of 0 - MAXID")
+print("You have ID:"+str(ID))
+
+server = HTTPServer(("", PORT+ID), WorkerHandler)
 server.serve_forever()

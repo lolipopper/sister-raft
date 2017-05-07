@@ -11,7 +11,7 @@ import random
 import sys
 
 DEFAULTNODEPORT = 14440;
-DEFAULTWORKERPORT = 12220;
+DEFAULTWORKERPORT = 13330;
 URL = "http://localhost";
 ID = 0;
 MAXID = 3
@@ -141,8 +141,8 @@ class NodeHandler(BaseHTTPRequestHandler):
                     for i in range(MAXWORKER):
                         if worker[i] < worker[leastCpuLoadId]:
                             leastCpuLoadId = i
-                    requests.get(URL+":"+str(DEFAULTWORKERPORT+leastCpuLoadId)+"/"+str(searchNumber))
-                    self.wfile.write(str(ID).encode('utf-8'))
+                    ret = requests.get(URL+":"+str(DEFAULTWORKERPORT+leastCpuLoadId)+"/"+str(searchNumber))
+                    self.wfile.write(str(ret.text).encode('utf-8'))
 
                 else :
                     raise Exception()
