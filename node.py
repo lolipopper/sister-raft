@@ -28,6 +28,8 @@ ERRORCODE = 999
 
 node = []
 worker = []
+workertime = []
+workertimeout = 5
 
 leaderID = -999
 hasVoted = 0
@@ -55,7 +57,7 @@ def init():
         node.append(DEFAULTNODEPORT + i)
     for i in range(MAXWORKER):
         worker.append(commitload)
-
+        workertime.append(time.time())
     global timeout
     timeout = randomTimeout()
 
@@ -122,6 +124,7 @@ class NodeHandler(BaseHTTPRequestHandler):
                     print("LOAD = " + str(commitload))
                     if status==3:
                         worker[int(args[2])] = commitload
+                        workertime[int(args[2])] = time.time()
                     else:
                         requests.get(URL+":"+str(DEFAULTNODEPORT+leaderID)+"/"+str(CPUSTATUS)+"/"+args[2]+"/"+args[3])
                     self.wfile.write(str(ID).encode('utf-8'))
@@ -138,6 +141,9 @@ class NodeHandler(BaseHTTPRequestHandler):
                     print("REQUESTVALUE")
                     leastCpuLoadId = 0
                     searchNumber = int(args[2])
+                    for i in range(MAXWORKER):
+                        if time.time() > (workertime[i] + workertimeout)
+                            worker[i] = 999
                     for i in range(MAXWORKER):
                         if worker[i] < worker[leastCpuLoadId]:
                             leastCpuLoadId = i
