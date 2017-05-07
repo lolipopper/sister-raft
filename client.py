@@ -17,6 +17,6 @@ while True:
 		r = requests.get(URL + ":" + str(DEFAULTNODEPORT + rand) + "/" + str(REQUESTVALUE) + "/" + str(reqPrime))
 		print("Return = " + str(r.text))
 	except requests.exceptions.RequestException as e:
-	    print ("The node is died")
+	    print ("The node is dead")
 
 	time.sleep(WAIT)
