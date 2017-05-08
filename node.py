@@ -29,7 +29,7 @@ ERRORCODE = 999
 node = []
 worker = []
 workertime = []
-workertimeout = 5
+workertimeout = 8
 
 leaderID = -999
 hasVoted = 0
@@ -142,11 +142,10 @@ class NodeHandler(BaseHTTPRequestHandler):
                     leastCpuLoadId = 0
                     searchNumber = int(args[2])
                     for i in range(MAXWORKER):
-                        if time.time() > (workertime[i] + workertimeout)
-                            worker[i] = 999
-                    for i in range(MAXWORKER):
+                        print("Worker cpu load before request send =" + str(worker[i]))
                         if worker[i] < worker[leastCpuLoadId]:
                             leastCpuLoadId = i
+                    print("Least cpu load id = " + str(leastCpuLoadId))
                     ret = requests.get(URL+":"+str(DEFAULTWORKERPORT+leastCpuLoadId)+"/"+str(searchNumber))
                     self.wfile.write(str(ret.text).encode('utf-8'))
 
@@ -214,6 +213,10 @@ while True:
     elif status == 3:
         # print("Become Leader")
         count = 1
+        for i in range(MAXWORKER):
+            if time.time() > (workertime[i] + workertimeout):
+                worker[i] = 999
+
         for i in range(MAXID):
             if i!= ID:
                 try:

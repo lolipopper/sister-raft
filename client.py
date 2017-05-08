@@ -7,7 +7,7 @@ MAXNODE = 3
 DEFAULTNODEPORT = 14440
 REQUESTVALUE = 3
 MAXPRIME = 60
-WAIT = 5
+WAIT = 2
 while True:
 	rand = random.randint(0,MAXNODE-1)
 	print ("Node requested to = ", str(rand))
