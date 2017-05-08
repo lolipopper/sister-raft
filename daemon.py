@@ -8,17 +8,20 @@ PORT = 12220;
 DEFAULTNODEPORT = 14440;
 WORKERPORT = 13330;
 CPUSTATUS = 2
-URL = "http://localhost";
+URL = "http://192.168.43.160";
+
+NODEURLS = ["http://192.168.43.204","http://192.168.43.204","http://192.168.43.204","http://192.168.43.160","http://192.168.43.160"]
+
 ID = 0;
-MAXNODE = 3
-MAXID = 3
+MAXNODE = 5
+MAXID = 5
 WAIT = 5;
 
 def sendStatus():
     load = getCpuLoad();
     for i in range(MAXNODE):
         try:
-            r = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(CPUSTATUS)+"/"+str(ID)+"/"+str(load))
+            r = requests.get(NODEURLS[i]+":"+str(DEFAULTNODEPORT+i)+"/"+str(CPUSTATUS)+"/"+str(ID)+"/"+str(load))
             print(str(r.text))
         except requests.exceptions.RequestException as e:
             print()

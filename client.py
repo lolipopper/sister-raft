@@ -2,7 +2,10 @@ import requests
 import random
 import time
 
-URL = "http://localhost"
+URL = "http://192.168.43.160"
+
+NODEURLS = ["http://192.168.43.204","http://192.168.43.204","http://192.168.43.204","http://192.168.43.160","http://192.168.43.160"]
+
 MAXNODE = 3
 DEFAULTNODEPORT = 14440
 REQUESTVALUE = 3
@@ -14,7 +17,7 @@ while True:
 	reqPrime = random.randint(2,MAXPRIME-1)
 	print("Prime Needed = " + str(reqPrime))
 	try:
-		r = requests.get(URL + ":" + str(DEFAULTNODEPORT + rand) + "/" + str(REQUESTVALUE) + "/" + str(reqPrime))
+		r = requests.get(NODEURLS[rand] + ":" + str(DEFAULTNODEPORT + rand) + "/" + str(REQUESTVALUE) + "/" + str(reqPrime))
 		print("Return = " + str(r.text))
 	except requests.exceptions.RequestException as e:
 	    print ("The node is dead")

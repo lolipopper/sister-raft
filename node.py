@@ -13,8 +13,12 @@ import sys
 DEFAULTNODEPORT = 14440;
 DEFAULTWORKERPORT = 13330;
 URL = "http://localhost";
+URLWORKER = "http://192.168.43.204";
+
+NODEURLS = ["http://192.168.43.204","http://192.168.43.204","http://192.168.43.204","http://192.168.43.160","http://192.168.43.160"]
+
 ID = 0;
-MAXID = 3
+MAXID = 5
 MAXWORKER = 5
 WAIT = 5
 
@@ -126,7 +130,7 @@ class NodeHandler(BaseHTTPRequestHandler):
                         worker[int(args[2])] = commitload
                         workertime[int(args[2])] = time.time()
                     else:
-                        requests.get(URL+":"+str(DEFAULTNODEPORT+leaderID)+"/"+str(CPUSTATUS)+"/"+args[2]+"/"+args[3])
+                        requests.get(NODEURLS[leaderID]+":"+str(DEFAULTNODEPORT+leaderID)+"/"+str(CPUSTATUS)+"/"+args[2]+"/"+args[3])
                     self.wfile.write(str(ID).encode('utf-8'))
                 elif n==SYNCSTATUS:
                     print("SYNCSTATUS")
@@ -146,7 +150,9 @@ class NodeHandler(BaseHTTPRequestHandler):
                         if worker[i] < worker[leastCpuLoadId]:
                             leastCpuLoadId = i
                     print("Least cpu load id = " + str(leastCpuLoadId))
-                    ret = requests.get(URL+":"+str(DEFAULTWORKERPORT+leastCpuLoadId)+"/"+str(searchNumber))
+
+                    ret = requests.get(NODEURLS[leastCpuLoadId]+":"+str(DEFAULTWORKERPORT+leastCpuLoadId)+"/"+str(searchNumber))
+
                     self.wfile.write(str(ret.text).encode('utf-8'))
 
                 else :
@@ -169,7 +175,7 @@ print("You have ID:"+str(ID))
 print("You are entering status:"+str(status))
 
 # start the server in a background thread
-server = ThreadingServer(('localhost',DEFAULTNODEPORT+ID),NodeHandler)
+server = ThreadingServer(('0.0.0.0',DEFAULTNODEPORT+ID),NodeHandler)
 server_thread = threading.Thread(target=server.serve_forever)
 server_thread.daemon = True
 server_thread.start()
@@ -191,10 +197,10 @@ while True:
         status = 2
         for i in range(MAXID):
             if i != ID:
-                print(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(REQUESTVOTE))
+                print(NODEURLS[i]+":"+str(DEFAULTNODEPORT+i)+"/"+str(REQUESTVOTE))
 
                 try:
-                    resp = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(REQUESTVOTE))
+                    resp = requests.get(NODEURLS[i]+":"+str(DEFAULTNODEPORT+i)+"/"+str(REQUESTVOTE))
                     if int(resp.text) < MAXID:
                         count += 1
                         print("YOU GOT A COUNT, NOW YOUR COUNT IS = " + str(count))
@@ -221,9 +227,9 @@ while True:
             if i!= ID:
                 try:
                     if commitid==999:
-                        resp = requests.get(URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(APPENDENTRY)+"/"+str(ID))
+                        resp = requests.get(NODEURLS[i]+":"+str(DEFAULTNODEPORT+i)+"/"+str(APPENDENTRY)+"/"+str(ID))
                     else:
-                        tempURL = URL+":"+str(DEFAULTNODEPORT+i)+"/"+str(SYNCSTATUS)+"/"+str(ID)
+                        tempURL = NODEURLS[i]+":"+str(DEFAULTNODEPORT+i)+"/"+str(SYNCSTATUS)+"/"+str(ID)
                         for i in range(MAXWORKER):
                             tempURL += "/"+str(worker[i])
                         print(tempURL)
